@@ -32,6 +32,16 @@ use image::{ImageBuffer, Rgb};
 use gif::{Frame, Encoder, Repeat};
 use std::fs::File;
 // use std::borrow::Cow;
+fn disk_to_ascii(size: usize, max_width: usize) -> String {
+    if size == 0 {
+        return " ".repeat(max_width);
+    }
+
+    let disk_width = size * 2 - 1;
+    let padding = (max_width - disk_width) / 2;
+    let disk = "-".repeat(disk_width);
+    format!("{}{}{}+{}{}", " ".repeat(padding), disk, "-", disk, " ".repeat(padding))
+}
 
 struct TowerState {
     left: Vec<usize>,
@@ -69,14 +79,65 @@ impl TowerState {
     fn to_ascii(&self) -> String {
         // Implement ASCII rendering here
         // Return the ASCII representation as a String
-        unimplemented!()
+        let max_disks = self.left.len().max(self.mid.len()).max(self.right.len());
+        let max_width = max_disks * 2 + 1;
+        
+        let mut result = String::new();
+
+        // Draw disks
+        for i in (0..max_disks).rev() {
+            let left_disk = self.left.get(i).unwrap_or(&0);
+            let mid_disk = self.mid.get(i).unwrap_or(&0);
+            let right_disk = self.right.get(i).unwrap_or(&0);
+
+            let left_str = disk_to_ascii(*left_disk, max_width);
+            let mid_str = disk_to_ascii(*mid_disk, max_width);
+            let right_str = disk_to_ascii(*right_disk, max_width);
+
+            result.push_str(&format!("{}   {}   {}\n", left_str, mid_str, right_str));
+        }
+
+        // Draw base
+        let base = "-".repeat(max_width);
+        result.push_str(&format!("{}   {}   {}\n", base, base, base));
+
+        result
     }
 }
 
 fn ascii_to_image(ascii: &str) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    // Convert ASCII to image
-    // Return an ImageBuffer
-    unimplemented!()
+    let lines: Vec<&str> = ascii.lines().collect();
+    let height = lines.len();
+    let width = lines[0].len();
+
+    // Scale factor to make the image larger and more visible
+    let scale = 5;
+    let img_width = width * scale;
+    let img_height = height * scale;
+
+    let mut img = ImageBuffer::new(img_width as u32, img_height as u32);
+
+    for (y, line) in lines.iter().enumerate() {
+        for (x, ch) in line.chars().enumerate() {
+            let color = match ch {
+                '-' => Rgb([0, 0, 255]),   // Blue for disks
+                '+' => Rgb([255, 0, 0]),   // Red for disk centers
+                '|' => Rgb([0, 255, 0]),   // Green for poles
+                _ => Rgb([255, 255, 255]), // White for background
+            };
+
+            // Fill a scale x scale square for each character
+            for dy in 0..scale {
+                for dx in 0..scale {
+                    let px = (x * scale + dx) as u32;
+                    let py = (y * scale + dy) as u32;
+                    img.put_pixel(px, py, color);
+                }
+            }
+        }
+    }
+
+    img
 }
 
 fn main() {
