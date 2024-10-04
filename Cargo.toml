@@ -1,8 +1,11 @@
 [package]
-name = "hanoi"
+name = "hanoi-gif-renderer"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Your Name <your.email@example.com>"]
+description = "A CLI tool that generates an ASCII GIF of the Tower of Hanoi solving process"
+license = "MIT"
 
 [dependencies]
+image = "0.24.6"
+gif = "0.12.0"
